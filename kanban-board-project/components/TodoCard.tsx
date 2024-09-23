@@ -1,49 +1,50 @@
 // components/TodoCard.tsx
 
-'use client'
+'use client';
 import getUrl from "@/lib/getURL";
 import { useBoardStore } from "@/store/BoardStore";
-import { DraggableProvidedDraggableProps, DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
-import { XCircleIcon } from "@heroicons/react/16/solid";
+import {
+  DraggableProvidedDraggableProps,
+  DraggableProvidedDragHandleProps,
+} from "@hello-pangea/dnd";
+import { XCircleIcon, PencilIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useEditModalStore } from "@/store/EditModalStore";
 
 type Props = {
-    todo: Todo;
-    index: number;
-    id: TypedColumn;
-    innerRef: (element: HTMLElement | null) => void;
-    draggableProps: DraggableProvidedDraggableProps;
-    dragHandleProps: DraggableProvidedDragHandleProps | null | undefined;
+  todo: Todo;
+  index: number;
+  id: TypedColumn;
+  innerRef: (element: HTMLElement | null) => void;
+  draggableProps: DraggableProvidedDraggableProps;
+  dragHandleProps: DraggableProvidedDragHandleProps | null | undefined;
 };
 
 function TodoCard({
-    todo,
-    index,
-    id,
-    innerRef,
-    draggableProps,
-    dragHandleProps,
+  todo,
+  index,
+  id,
+  innerRef,
+  draggableProps,
+  dragHandleProps,
 }: Props) {
-
   const deleteTask = useBoardStore((state) => state.deleteTask);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const openEditModal = useEditModalStore((state) => state.openEditModal);
+  const setTaskToEdit = useEditModalStore((state) => state.setTaskToEdit);
 
-  useEffect(() =>  {
+  useEffect(() => {
     if (todo.image) {
-      // Check if todo.image is a string or an object
       let imageObj: Image;
       if (typeof todo.image === 'string') {
         try {
-          console.log('Raw todo.image (string):', todo.image);
           imageObj = JSON.parse(todo.image);
         } catch (err) {
           console.error('Error parsing image JSON:', err);
           return;
         }
       } else {
-        // If it's already an object
-        console.log('Raw todo.image (object):', todo.image);
         imageObj = todo.image;
       }
 
@@ -56,44 +57,59 @@ function TodoCard({
         } catch (error) {
           console.error('Error fetching image URL:', error);
         }
-      }
+      };
 
       fetchImage();
     }
-  }, [todo])
+  }, [todo]);
+
+  const handleEdit = () => {
+    setTaskToEdit(todo, id);
+    openEditModal();
+  };
 
   return (
     <div
-    className="bg-white rounded-md space-y-2 drop-shadow-md"
-    {...draggableProps}
-    {...dragHandleProps}
-    ref={innerRef}
+      className="bg-white rounded-md space-y-2 drop-shadow-md"
+      {...draggableProps}
+      {...dragHandleProps}
+      ref={innerRef}
     >
-      <div className="flex justify-between items-center p-5">
-        <p>{todo.title}</p>
-        <button onClick={() => deleteTask(index, todo, id)} 
-        className="text-red-500 hover:text-red-600">
-            <XCircleIcon 
-            className="ml-5 h-8 w-8"
-            />
-        </button>
-      </div>
-      {/* Add image if available */}
-      {imageUrl && (
-        <div className="h-full w-full rounded-b-md">
-          <Image 
-            src={imageUrl}
-            alt="Task Image"
-            width={400}
-            height={200}
-            className="w-full object-contain rounded-b-md"
-            // Uncomment if using signed URLs that might not be compatible with Next.js optimization
-            // unoptimized 
-          />
+      <div className="p-5">
+        <div className="flex items-start">
+        <p className="flex-1 break-words max-h-40 overflow-y-auto">{todo.title}</p>
+          <div className="flex-shrink-0 flex space-x-2">
+            {/* Edit Button */}
+            <button
+              onClick={handleEdit}
+              className="text-blue-500 hover:text-blue-600"
+            >
+              <PencilIcon className="-mr-1 h-6 w-6" />
+            </button>
+            {/* Delete Button */}
+            <button
+              onClick={() => deleteTask(index, todo, id)}
+              className="text-red-500 hover:text-red-600"
+            >
+              <XCircleIcon className="-mr-3 h-8 w-8" />
+            </button>
+          </div>
         </div>
-      )}
+        {/* Add image if available */}
+        {imageUrl && (
+          <div className="h-full w-full rounded-b-md mt-2">
+            <Image
+              src={imageUrl}
+              alt="Task Image"
+              width={400}
+              height={200}
+              className="w-full object-contain rounded-b-md"
+            />
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }
 
 export default TodoCard;

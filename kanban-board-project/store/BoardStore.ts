@@ -22,6 +22,13 @@ interface BoardState {
   setNewTaskInput: (input: string) => void;
   setNewTaskType: (columnId: TypedColumn) => void;
   setImage: (image: File | null) => void;
+
+  updateTask: (
+    todo: Todo,
+    updatedTitle: string,
+    columnId: TypedColumn,
+    image?: File | null
+  ) => Promise<void>;
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -185,6 +192,77 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         column.todos.sort((a, b) => a.order - b.order); // Maintain order
       }
     
+      return {
+        board: {
+          columns: newColumns,
+        },
+      };
+    });
+  },
+  updateTask: async (todo, updatedTitle, columnId, image) => {
+    let file: Image | undefined;
+
+    if (image) {
+      // Upload new image
+      const fileUploaded = await uploadImage(image);
+      if (fileUploaded) {
+        file = {
+          bucketId: fileUploaded.bucketId,
+          fileId: fileUploaded.$id,
+        };
+      }
+      // Delete the old image if it exists
+      if (todo.image) {
+        let imageObj: Image;
+        if (typeof todo.image === 'string') {
+          imageObj = JSON.parse(todo.image);
+        } else {
+          imageObj = todo.image;
+        }
+        await storage.deleteFile(imageObj.bucketId, imageObj.fileId);
+      }
+    } else if (todo.image && !image) {
+      // If the image is set to null, delete the old image
+      let imageObj: Image;
+      if (typeof todo.image === 'string') {
+        imageObj = JSON.parse(todo.image);
+      } else {
+        imageObj = todo.image;
+      }
+      await storage.deleteFile(imageObj.bucketId, imageObj.fileId);
+    }
+
+    // Update the task in Appwrite
+    await databases.updateDocument(
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+      process.env.NEXT_PUBLIC_TODOS_COLLECTION_ID!,
+      todo.$id,
+      {
+        title: updatedTitle,
+        ...(file !== undefined
+          ? { image: JSON.stringify(file) }
+          : { image: null }), // Set image to null if deleted
+      }
+    );
+
+    // Update the task in the local state
+    set((state) => {
+      const newColumns = new Map(state.board.columns);
+      const column = newColumns.get(columnId);
+
+      if (column) {
+        const taskIndex = column.todos.findIndex((t) => t.$id === todo.$id);
+        if (taskIndex !== -1) {
+          column.todos[taskIndex] = {
+            ...column.todos[taskIndex],
+            title: updatedTitle,
+            ...(file !== undefined
+              ? { image: JSON.stringify(file) }
+              : { image: null }),
+          };
+        }
+      }
+
       return {
         board: {
           columns: newColumns,

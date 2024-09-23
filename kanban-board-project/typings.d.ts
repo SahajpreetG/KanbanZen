@@ -11,15 +11,18 @@ interface Column {
     todos: Todo[];
 }
 
+// typings.d.ts
+
 interface Todo {  
     $id: string;
-  $createdAt: string;
-  title: string;
-  status: TypedColumn;
-  order: number;
-  image?: string | Image;
-  userId: string;
-}
+    $createdAt: string;
+    title: string;
+    status: TypedColumn;
+    order: number;
+    image?: string | Image | null; 
+    userId: string;
+  }
+  
 
 interface Image {
     bucketId: string;
