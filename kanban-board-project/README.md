@@ -34,3 +34,105 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+```
+kanban-board-project
+├─ .eslintrc.json
+├─ .gitignore
+├─ app
+│  ├─ api
+│  │  └─ generateSummary
+│  │     └─ route.ts
+│  ├─ favicon.ico
+│  ├─ globals.css
+│  ├─ layout.tsx
+│  ├─ login
+│  │  └─ page.tsx
+│  └─ page.tsx
+├─ appwrite.ts
+├─ components
+│  ├─ Board.tsx
+│  ├─ Column.tsx
+│  ├─ dynamicLayout.tsx
+│  ├─ Header.tsx
+│  ├─ Login.tsx
+│  ├─ Modal.tsx
+│  ├─ TaskTypeRadioGroup.tsx
+│  └─ TodoCard.tsx
+├─ lib
+│  ├─ fetchSuggestion.ts
+│  ├─ formatTodosForAI.ts
+│  ├─ getTodosGroupedByColumn.ts
+│  ├─ getURL.ts
+│  └─ uploadImage.ts
+├─ next.config.mjs
+├─ openai.ts
+├─ package-lock.json
+├─ package.json
+├─ postcss.config.mjs
+├─ public
+│  ├─ next.svg
+│  └─ vercel.svg
+├─ README.md
+├─ store
+│  ├─ BoardStore.ts
+│  └─ ModalStore.ts
+├─ tailwind.config.ts
+├─ tsconfig.json
+└─ typings.d.ts
+
+```
+```
+kanban-board-project
+├─ .eslintrc.json
+├─ .gitignore
+├─ app
+│  ├─ (authenticated)
+│  │  └─ layout.tsx
+│  ├─ api
+│  │  └─ generateSummary
+│  │     └─ route.ts
+│  ├─ callback
+│  │  └─ page.tsx
+│  ├─ fail
+│  │  └─ page.tsx
+│  ├─ favicon.ico
+│  ├─ globals.css
+│  ├─ layout.tsx
+│  ├─ login
+│  │  └─ page.tsx
+│  └─ page.tsx
+├─ appwrite.ts
+├─ components
+│  ├─ Board.tsx
+│  ├─ Column.tsx
+│  ├─ dynamicLayout.tsx
+│  ├─ Header.tsx
+│  ├─ Login.tsx
+│  ├─ LogoutButton.tsx
+│  ├─ Modal.tsx
+│  ├─ TaskTypeRadioGroup.tsx
+│  └─ TodoCard.tsx
+├─ lib
+│  ├─ fetchSuggestion.ts
+│  ├─ formatTodosForAI.ts
+│  ├─ getTodosGroupedByColumn.ts
+│  ├─ getURL.ts
+│  └─ uploadImage.ts
+├─ next.config.mjs
+├─ openai.ts
+├─ package-lock.json
+├─ package.json
+├─ postcss.config.mjs
+├─ public
+│  ├─ next.svg
+│  └─ vercel.svg
+├─ README.md
+├─ store
+│  ├─ BoardStore.ts
+│  └─ ModalStore.ts
+├─ tailwind.config.ts
+├─ tsconfig.json
+└─ typings.d.ts
+
+```

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import openai from "@/openai";
-import { stringify } from "querystring";
 
 export async function POST(request: Request) {
     // todos in the body of the POST request
@@ -11,6 +10,7 @@ export async function POST(request: Request) {
         model: "gpt-4o-mini",
         temperature: 0.8,
         n: 1,
+        max_tokens: 300,
         stream: false,
         messages: [
             {

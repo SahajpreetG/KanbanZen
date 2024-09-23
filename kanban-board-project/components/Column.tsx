@@ -1,3 +1,5 @@
+// components/Column.tsx
+
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { PlusCircleIcon } from "@heroicons/react/16/solid";
 import TodoCard from "./TodoCard";
@@ -8,8 +10,8 @@ type Props = {
     id: TypedColumn;
     todos: Todo[];
     index: number;
-    
 };
+
 const idToColumnText: {
     [key in TypedColumn]: String;
 } = {
@@ -19,103 +21,97 @@ const idToColumnText: {
 };
 
 function Column({id, todos, index}: Props) {
-    const [searchString, setNewTaskType] = useBoardStore((state) => [
+    const [searchString, setSearchString, setNewTaskType] = useBoardStore((state) => [
         state.searchString,
+        state.setSearchString,
         state.setNewTaskType,
     ]);
     const openModal = useModalStore((state) => state.openModal);
     const handleAddTodo = () => {
         setNewTaskType(id);
         openModal();
-
     }
 
-  return (
-    
-    <Draggable draggableId={id} index={index}>
-        {(provided) => (
-            <div
-                
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-                ref={provided.innerRef}
-                
-            >
-                
-                { /* render droppable todos in the column */}
-                <Droppable droppableId={index.toString()} type='card'>
-                    {(provided, snapshot)  => (
-                        <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className={`p-2 rounded-2xl shadow-sm ${
-                            snapshot.isDraggingOver ? "bg-green-200" :
-                            "bg-white/50"
-                        }`}
-                        >
-                            <h2 className="flex justify-between font-bold text-xl p-2">
-                                {idToColumnText[id]}
-                                <span className="text-gray-500 bg-gray-200 rounded-full
-                                px-2 py-1 text-sm font-normal">
-                                    {/*Ensuring number of task symobol is dynamically updated with search string results */}
-                                    {
-                                    !searchString? todos.length : 
-                                    todos.filter(todo => todo.title.toLowerCase()
-                                    .includes(searchString
-                                    .toLowerCase()))
-                                    .length}
-                                </span>
-                            </h2>
+    return (
+        <Draggable draggableId={id} index={index}>
+            {(provided) => (
+                <div
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    ref={provided.innerRef}
+                >
+                    {/* Use column ID as droppableId */}
+                    <Droppable droppableId={id} type='card'>
+                        {(provided, snapshot)  => (
+                            <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className={`p-2 rounded-2xl shadow-sm ${
+                                    snapshot.isDraggingOver ? "bg-green-200" :
+                                    "bg-white/50"
+                                }`}
+                            >
+                                <h2 className="flex justify-between font-bold text-xl p-2">
+                                    {idToColumnText[id]}
+                                    <span className="text-gray-500 bg-gray-200 rounded-full
+                                    px-2 py-1 text-sm font-normal">
+                                        {/* Dynamically update task count based on search */}
+                                        {
+                                        !searchString ? todos.length : 
+                                        todos.filter(todo => todo.title.toLowerCase()
+                                        .includes(searchString.toLowerCase()))
+                                        .length}
+                                    </span>
+                                </h2>
 
-                            <div className="space-y-2">
-                                {/* Search string showing cards if matching string is in any of the columns */}
-                                {todos.map((todo, index) => {
-                                    if(
-                                        searchString && 
-                                        !todo.title
-                                        .toLowerCase()
-                                        .includes(searchString.toLowerCase())
-                                    )
-                                     return null;
+                                <div className="space-y-2">
+                                    {/* Render filtered todos */}
+                                    {todos.map((todo, index) => {
+                                        if(
+                                            searchString && 
+                                            !todo.title
+                                            .toLowerCase()
+                                            .includes(searchString.toLowerCase())
+                                        )
+                                         return null;
 
-                                    return (
-                                    <Draggable 
-                                    key={todo.$id}
-                                    draggableId={todo.$id}
-                                    index={index}
-                                    >
-                                        {(provided) => (
-                                            <TodoCard 
-                                            todo={todo}
-                                            index={index}
-                                            id={id}
-                                            innerRef={provided.innerRef}
-                                            draggableProps={provided.draggableProps}
-                                            dragHandleProps={provided.dragHandleProps}
-                                            />
-                                        )}
+                                        return (
+                                        <Draggable 
+                                        key={todo.$id}
+                                        draggableId={todo.$id}
+                                        index={index}
+                                        >
+                                            {(provided) => (
+                                                <TodoCard 
+                                                    todo={todo}
+                                                    index={index}
+                                                    id={id}
+                                                    innerRef={provided.innerRef}
+                                                    draggableProps={provided.draggableProps}
+                                                    dragHandleProps={provided.dragHandleProps}
+                                                />
+                                            )}
+                                        </Draggable>
+                                    )})}
 
-                                    </Draggable>
-                                    
-                                )})}
+                                    {provided.placeholder}
 
-                                {provided.placeholder}
-
-                                <div className="flex items-end justify-end p-2">
-                                    <button onClick={handleAddTodo} 
-                                    className="text-green-500 hover:text-green-600">
-                                        <PlusCircleIcon className="ml-5 h-8 w-8" />
-                                    </button>
+                                    <div className="flex items-end justify-end p-2">
+                                        <button 
+                                            onClick={handleAddTodo} 
+                                            className="text-green-500 hover:text-green-600"
+                                        >
+                                            <PlusCircleIcon className="ml-5 h-8 w-8" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
-                        </div>
-                    )}
-                </Droppable>
-            </div>
-        )}
-    </Draggable>
-  )
+                        )}
+                    </Droppable>
+                </div>
+            )}
+        </Draggable>
+    )
 }
 
-export default Column
+export default Column;

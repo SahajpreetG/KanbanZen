@@ -19,18 +19,3 @@ const formatTodosForAI = (board: Board) => {
 };
 
 export default formatTodosForAI;
-
-// export function formatTodosForAI(board: Board) {
-//     const columns = Array.from(board.columns.entries());
-//     const todos = columns.reduce((acc, [id, column]) => {
-//         acc[id] = column.todos.map((todo) => ({
-//             id: todo.$id,
-//             title: todo.title,
-//             status: todo.status,
-//             createdAt: todo.$createdAt,
-//         }));
-//         return acc;
-//     }, {} as Record<TypedColumn, { id: string; title: string; status: TypedColumn; createdAt: string }[]>);
-
-//     return todos;
-// }

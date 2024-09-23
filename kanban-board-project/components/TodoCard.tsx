@@ -1,3 +1,5 @@
+// components/TodoCard.tsx
+
 'use client'
 import getUrl from "@/lib/getURL";
 import { useBoardStore } from "@/store/BoardStore";
@@ -28,17 +30,37 @@ function TodoCard({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() =>  {
-  if (todo.image) {
-    const fetchImage = async () => {
-      const url = await getUrl(todo.image!);
-      if (url) {
-        setImageUrl(url.toString());
+    if (todo.image) {
+      // Check if todo.image is a string or an object
+      let imageObj: Image;
+      if (typeof todo.image === 'string') {
+        try {
+          console.log('Raw todo.image (string):', todo.image);
+          imageObj = JSON.parse(todo.image);
+        } catch (err) {
+          console.error('Error parsing image JSON:', err);
+          return;
+        }
+      } else {
+        // If it's already an object
+        console.log('Raw todo.image (object):', todo.image);
+        imageObj = todo.image;
       }
-    }
 
-    fetchImage();
-  }
-}, [todo])
+      const fetchImage = async () => {
+        try {
+          const url = await getUrl(imageObj);
+          if (url) {
+            setImageUrl(url);
+          }
+        } catch (error) {
+          console.error('Error fetching image URL:', error);
+        }
+      }
+
+      fetchImage();
+    }
+  }, [todo])
 
   return (
     <div
@@ -56,15 +78,17 @@ function TodoCard({
             />
         </button>
       </div>
-      {/*Add image here... */}
+      {/* Add image if available */}
       {imageUrl && (
         <div className="h-full w-full rounded-b-md">
           <Image 
-          src={imageUrl}
-          alt="Task Image"
-          width={400}
-          height={200}
-          className="w-full object-contain rounded-b-md"
+            src={imageUrl}
+            alt="Task Image"
+            width={400}
+            height={200}
+            className="w-full object-contain rounded-b-md"
+            // Uncomment if using signed URLs that might not be compatible with Next.js optimization
+            // unoptimized 
           />
         </div>
       )}
