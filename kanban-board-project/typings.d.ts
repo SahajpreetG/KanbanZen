@@ -21,6 +21,7 @@ interface Todo {
     order: number;
     image?: string | Image | null; 
     userId: string;
+    imageUrl?: string;
   }
   
 

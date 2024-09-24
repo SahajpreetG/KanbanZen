@@ -6,16 +6,19 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, FormEvent, useEffect, useState } from 'react';
 import { useEditModalStore } from '@/store/EditModalStore';
 import { useBoardStore } from '@/store/BoardStore';
-import { PhotoIcon } from '@heroicons/react/24/solid';
+import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/solid'; // Import XMarkIcon
 import Image from 'next/image';
 import getUrl from '@/lib/getURL';
+import { Rings } from 'react-loader-spinner'; // Import the loading icon
 
 function EditModal() {
   const { isOpen, closeEditModal, taskToEdit, columnId } = useEditModalStore();
-  const { updateTask } = useBoardStore();
+  const { updateTask, deleteImage } = useBoardStore();
   const [updatedTaskInput, setUpdatedTaskInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // Loading state for save
+  const [deletingImage, setDeletingImage] = useState(false); // Loading state for image deletion
 
   useEffect(() => {
     if (taskToEdit) {
@@ -53,22 +56,72 @@ function EditModal() {
     e.preventDefault();
     if (!updatedTaskInput || !taskToEdit || !columnId) return;
 
-    await updateTask(taskToEdit, updatedTaskInput, columnId, image);
-    setImage(null);
-    closeEditModal();
+    try {
+      setLoading(true);
+      await updateTask(taskToEdit, updatedTaskInput, columnId, image);
+      setImage(null);
+      closeEditModal();
+      // Global alert handled in the store
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // Optionally, trigger a global error alert
+      // useAlertStore.getState().showAlert('Failed to update task.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (!taskToEdit || !taskToEdit.image) return;
+
+    let imageObj: Image;
+
+    if (typeof taskToEdit.image === 'string') {
+      try {
+        imageObj = JSON.parse(taskToEdit.image);
+      } catch (err) {
+        console.error('Error parsing image JSON:', err);
+        // Optionally, trigger a global error alert
+        // useAlertStore.getState().showAlert('Failed to delete image.');
+        return;
+      }
+    } else {
+      imageObj = taskToEdit.image;
+    }
+
+    try {
+      setDeletingImage(true);
+      // Call the store's deleteImage function
+      await deleteImage(taskToEdit.$id, imageObj);
+      
+      // Update local state
+      setExistingImageUrl(null);
+      setImage(null);
+      // Global alert handled in the store
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      // Optionally, trigger a global error alert
+      // useAlertStore.getState().showAlert('Failed to delete image.');
+    } finally {
+      setDeletingImage(false);
+    }
   };
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={closeEditModal}>
+      <Dialog as="div" className="relative z-10" onClose={() => {
+        if (!loading && !deletingImage) {
+          closeEditModal();
+        }
+      }}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
           leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
         >
           <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
@@ -78,11 +131,11 @@ function EditModal() {
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
+              enterFrom="opacity-0 translate-y-4"
+              enterTo="opacity-100 translate-y-0"
               leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              leaveFrom="opacity-100 translate-y-0"
+              leaveTo="opacity-0 translate-y-4"
             >
               <Dialog.Panel
                 className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all"
@@ -100,6 +153,7 @@ function EditModal() {
                     onChange={(e) => setUpdatedTaskInput(e.target.value)}
                     placeholder="Update your task..."
                     className="w-full border border-gray-300 rounded-md outline-none p-3 text-base mb-4"
+                    required
                   />
 
                   <div className="mb-4">
@@ -109,10 +163,10 @@ function EditModal() {
                         const imageInput = document.getElementById('edit-image-upload') as HTMLInputElement;
                         imageInput.click();
                       }}
-                      className="w-full border border-gray-300 rounded-md outline-none p-5 focus-visible:ring-2
+                      className="w-full border border-gray-300 rounded-md outline-none p-5 flex items-center justify-center focus-visible:ring-2
                         focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                     >
-                      <PhotoIcon className="h-6 w-6 mr-2 inline-block" />
+                      <PhotoIcon className="h-6 w-6 mr-2" />
                       {image || existingImageUrl ? 'Replace Image' : 'Upload Image'}
                     </button>
                     <input
@@ -132,11 +186,26 @@ function EditModal() {
                         <Image
                           src={existingImageUrl}
                           alt="Existing Image"
-                          layout="fill"
-                          objectFit="cover"
-                          className="rounded-md cursor-pointer"
-                          onClick={() => setExistingImageUrl(null)}
+                          fill
+                          className="object-cover rounded-md"
                         />
+                        <button
+                          type="button"
+                          onClick={handleDeleteImage}
+                          className="absolute top-2 right-2 bg-gray-800 bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-75 focus:outline-none"
+                          aria-label="Delete Image"
+                        >
+                          {deletingImage ? (
+                            <Rings
+                              height="16"
+                              width="16"
+                              color="#ffffff"
+                              ariaLabel="loading-indicator"
+                            />
+                          ) : (
+                            <XMarkIcon className="h-4 w-4" />
+                          )}
+                        </button>
                       </div>
                     )}
                     {image && (
@@ -144,11 +213,17 @@ function EditModal() {
                         <Image
                           src={URL.createObjectURL(image)}
                           alt="New Uploaded Image"
-                          layout="fill"
-                          objectFit="cover"
-                          className="rounded-md cursor-pointer"
-                          onClick={() => setImage(null)}
+                          fill
+                          className="object-cover rounded-md"
                         />
+                        <button
+                          type="button"
+                          onClick={() => setImage(null)}
+                          className="absolute top-2 right-2 bg-gray-800 bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-75 focus:outline-none"
+                          aria-label="Remove Image"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
                       </div>
                     )}
                   </div>
@@ -156,13 +231,22 @@ function EditModal() {
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      disabled={!updatedTaskInput}
-                      className={`inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2
+                      disabled={!updatedTaskInput || loading || deletingImage}
+                      className={`inline-flex justify-center items-center rounded-md border border-transparent bg-blue-100 px-4 py-2
                         text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2
                         focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:bg-gray-100 disabled:text-gray-300
                         disabled:cursor-not-allowed`}
                     >
-                      Save Task
+                      {loading ? (
+                        <Rings
+                          height="20"
+                          width="20"
+                          color="#3B82F6"
+                          ariaLabel="loading-indicator"
+                        />
+                      ) : (
+                        'Save Task'
+                      )}
                     </button>
                   </div>
                 </form>

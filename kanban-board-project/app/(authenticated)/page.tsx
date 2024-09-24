@@ -5,7 +5,8 @@
 import Header from '@/components/Header';
 import Board from '@/components/Board';
 import Modal from '@/components/Modal';
-import EditModal from '@/components/editModal'; // Import EditModal
+import EditModal from '@/components/editModal';
+import Alert from '@/components/Alert'; // Import Alert
 
 export default function Home() {
   return (
@@ -13,10 +14,12 @@ export default function Home() {
       <Header />
       <Board />
       <Modal />
-      <EditModal /> {/* Include the EditModal component */}
+      <EditModal />
+      <Alert /> {/* Include the Alert component */}
     </main>
   );
 }
+
 
 
 

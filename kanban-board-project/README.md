@@ -136,3 +136,63 @@ kanban-board-project
 └─ typings.d.ts
 
 ```
+```
+kanban-board-project
+├─ .eslintrc.json
+├─ .gitignore
+├─ .vscode
+│  └─ extensions.json
+├─ app
+│  ├─ (authenticated)
+│  │  ├─ layout.tsx
+│  │  └─ page.tsx
+│  ├─ api
+│  │  └─ generateSummary
+│  │     └─ route.ts
+│  ├─ callback
+│  │  └─ page.tsx
+│  ├─ fail
+│  │  └─ page.tsx
+│  ├─ favicon.ico
+│  ├─ globals.css
+│  ├─ layout.tsx
+│  └─ login
+│     └─ page.tsx
+├─ appwrite.ts
+├─ components
+│  ├─ Alert.tsx
+│  ├─ Board.tsx
+│  ├─ Column.tsx
+│  ├─ dynamicLayout.tsx
+│  ├─ editModal.tsx
+│  ├─ Header.tsx
+│  ├─ Login.tsx
+│  ├─ LogoutButton.tsx
+│  ├─ Modal.tsx
+│  ├─ TaskTypeRadioGroup.tsx
+│  └─ TodoCard.tsx
+├─ lib
+│  ├─ fetchSuggestion.ts
+│  ├─ formatTodosForAI.ts
+│  ├─ getTodosGroupedByColumn.ts
+│  ├─ getURL.ts
+│  └─ uploadImage.ts
+├─ next.config.mjs
+├─ openai.ts
+├─ package-lock.json
+├─ package.json
+├─ postcss.config.mjs
+├─ public
+│  ├─ next.svg
+│  └─ vercel.svg
+├─ README.md
+├─ store
+│  ├─ AlertStore.ts
+│  ├─ BoardStore.ts
+│  ├─ EditModalStore.ts
+│  └─ ModalStore.ts
+├─ tailwind.config.ts
+├─ tsconfig.json
+└─ typings.d.ts
+
+```

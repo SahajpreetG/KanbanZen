@@ -1,3 +1,4 @@
+//lib/fetchSuggestions.ts
 import formatTodosForAI from "./formatTodosForAI";
 
 const fetchSuggestion = async (board: Board) => {
