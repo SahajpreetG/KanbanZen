@@ -12,13 +12,14 @@ import getUrl from '@/lib/getURL';
 import { Rings } from 'react-loader-spinner'; // Import the loading icon
 
 function EditModal() {
-  const { isOpen, closeEditModal, taskToEdit, columnId } = useEditModalStore();
+  const { isOpen, closeEditModal, taskToEdit, columnId, setTaskToEdit } = useEditModalStore();
   const { updateTask, deleteImage } = useBoardStore();
   const [updatedTaskInput, setUpdatedTaskInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false); // Loading state for save
   const [deletingImage, setDeletingImage] = useState(false); // Loading state for image deletion
+  const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null); // Local alert state
 
   useEffect(() => {
     if (taskToEdit) {
@@ -48,6 +49,8 @@ function EditModal() {
         };
 
         fetchImage();
+      } else {
+        setExistingImageUrl(null);
       }
     }
   }, [taskToEdit]);
@@ -61,18 +64,18 @@ function EditModal() {
       await updateTask(taskToEdit, updatedTaskInput, columnId, image);
       setImage(null);
       closeEditModal();
-      // Global alert handled in the store
+      // Optionally, trigger a global alert
+      // useAlertStore.getState().showAlert('Task updated successfully!');
     } catch (error) {
       console.error('Error updating task:', error);
-      // Optionally, trigger a global error alert
-      // useAlertStore.getState().showAlert('Failed to update task.');
+      setAlert({ message: 'Failed to update task. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteImage = async () => {
-    if (!taskToEdit || !taskToEdit.image) return;
+    if (!taskToEdit || !taskToEdit.image || !columnId) return;
 
     let imageObj: Image;
 
@@ -81,8 +84,7 @@ function EditModal() {
         imageObj = JSON.parse(taskToEdit.image);
       } catch (err) {
         console.error('Error parsing image JSON:', err);
-        // Optionally, trigger a global error alert
-        // useAlertStore.getState().showAlert('Failed to delete image.');
+        setAlert({ message: 'Failed to delete image.', type: 'error' });
         return;
       }
     } else {
@@ -93,15 +95,19 @@ function EditModal() {
       setDeletingImage(true);
       // Call the store's deleteImage function
       await deleteImage(taskToEdit.$id, imageObj);
-      
+
       // Update local state
       setExistingImageUrl(null);
       setImage(null);
-      // Global alert handled in the store
+
+      // Update the taskToEdit object's image property to null
+      const updatedTask = { ...taskToEdit, image: null };
+      setTaskToEdit(updatedTask, columnId);
+
+      setAlert({ message: 'Image deleted successfully!', type: 'success' });
     } catch (error) {
       console.error('Error deleting image:', error);
-      // Optionally, trigger a global error alert
-      // useAlertStore.getState().showAlert('Failed to delete image.');
+      setAlert({ message: 'Failed to delete image. Please try again.', type: 'error' });
     } finally {
       setDeletingImage(false);
     }
@@ -112,6 +118,7 @@ function EditModal() {
       <Dialog as="div" className="relative z-10" onClose={() => {
         if (!loading && !deletingImage) {
           closeEditModal();
+          setAlert(null);
         }
       }}>
         <Transition.Child
@@ -157,6 +164,10 @@ function EditModal() {
                   />
 
                   <div className="mb-4">
+                    {/* If you have TaskTypeRadioGroup, include it here */}
+                  </div>
+
+                  <div className="mb-4">
                     <button
                       type="button"
                       onClick={() => {
@@ -178,6 +189,7 @@ function EditModal() {
                         if (e.target.files && e.target.files[0].type.startsWith("image/")) {
                           setImage(e.target.files[0]);
                           setExistingImageUrl(null); // Remove existing image preview
+                          setAlert(null); // Clear any existing alerts
                         }
                       }}
                     />
@@ -227,6 +239,21 @@ function EditModal() {
                       </div>
                     )}
                   </div>
+
+                  {/* Local Alert */}
+                  {alert && (
+                    <div className={`mb-4 p-3 rounded-md flex items-center justify-between ${alert.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      <span>{alert.message}</span>
+                      <button
+                        type="button"
+                        onClick={() => setAlert(null)}
+                        className="text-xl font-bold leading-none focus:outline-none"
+                        aria-label="Close Alert"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  )}
 
                   <div className="flex justify-end">
                     <button

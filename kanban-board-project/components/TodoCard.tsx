@@ -47,7 +47,7 @@ function TodoCard({
       } else {
         imageObj = todo.image;
       }
-
+  
       const fetchImage = async () => {
         try {
           const url = await getUrl(imageObj);
@@ -58,10 +58,12 @@ function TodoCard({
           console.error('Error fetching image URL:', error);
         }
       };
-
+  
       fetchImage();
+    } else {
+      setImageUrl(null);
     }
-  }, [todo]);
+  }, [todo.image]); // Changed dependency to todo.image
 
   const handleEdit = () => {
     setTaskToEdit(todo, id);
