@@ -13,6 +13,8 @@ interface Column {
 
 // typings.d.ts
 
+// typings.d.ts
+
 interface Todo {  
     $id: string;
     $createdAt: string;
@@ -22,7 +24,10 @@ interface Todo {
     image?: string | Image | null; 
     userId: string;
     imageUrl?: string;
+    dueDate?: string | null; // ISO date string
+    priority?: 'Low' | 'Medium' | 'High' | null;
   }
+  
   
 
 interface Image {

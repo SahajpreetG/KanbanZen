@@ -2,14 +2,33 @@
 
 'use client';
 
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, Transition, RadioGroup } from '@headlessui/react';
 import { Fragment, FormEvent, useEffect, useState } from 'react';
 import { useEditModalStore } from '@/store/EditModalStore';
 import { useBoardStore } from '@/store/BoardStore';
-import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/solid'; // Import XMarkIcon
+import { PhotoIcon, XMarkIcon, CheckCircleIcon, ClockIcon } from '@heroicons/react/24/solid'; // Import necessary icons
 import Image from 'next/image';
 import getUrl from '@/lib/getURL';
 import { Rings } from 'react-loader-spinner'; // Import the loading icon
+import { format } from 'date-fns';
+
+const priorities = [
+  {
+    id: "Low",
+    name: "Low",
+    color: "bg-green-500",
+  },
+  {
+    id: "Medium",
+    name: "Medium",
+    color: "bg-yellow-500",
+  },
+  {
+    id: "High",
+    name: "High",
+    color: "bg-red-500",
+  },
+];
 
 function EditModal() {
   const { isOpen, closeEditModal, taskToEdit, columnId, setTaskToEdit } = useEditModalStore();
@@ -20,10 +39,15 @@ function EditModal() {
   const [loading, setLoading] = useState(false); // Loading state for save
   const [deletingImage, setDeletingImage] = useState(false); // Loading state for image deletion
   const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null); // Local alert state
+  const [dueDate, setDueDate] = useState<string | null>(null);
+  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High' | null>(null);
 
   useEffect(() => {
     if (taskToEdit) {
       setUpdatedTaskInput(taskToEdit.title);
+      setDueDate(taskToEdit.dueDate ? taskToEdit.dueDate : null);
+      setPriority(taskToEdit.priority ? taskToEdit.priority : null);
+
       if (taskToEdit.image) {
         let imageObj: Image;
         if (typeof taskToEdit.image === 'string') {
@@ -61,11 +85,17 @@ function EditModal() {
 
     try {
       setLoading(true);
-      await updateTask(taskToEdit, updatedTaskInput, columnId, image);
+      await updateTask(
+        taskToEdit,
+        updatedTaskInput,
+        columnId,
+        image,
+        dueDate,
+        priority
+      );
       setImage(null);
       closeEditModal();
-      // Optionally, trigger a global alert
-      // useAlertStore.getState().showAlert('Task updated successfully!');
+      // ...existing code
     } catch (error) {
       console.error('Error updating task:', error);
       setAlert({ message: 'Failed to update task. Please try again.', type: 'error' });
@@ -123,10 +153,10 @@ function EditModal() {
       }}>
         <Transition.Child
           as={Fragment}
-          enter="ease-out duration-300"
+          enter="ease-out duration-100"
           enterFrom="opacity-0 scale-95"
           enterTo="opacity-100 scale-100"
-          leave="ease-in duration-200"
+          leave="ease-in duration-100"
           leaveFrom="opacity-100 scale-100"
           leaveTo="opacity-0 scale-95"
         >
@@ -239,6 +269,72 @@ function EditModal() {
                       </div>
                     )}
                   </div>
+                  {/* Due Date Field */}
+      <div className="mb-4">
+        <label className="flex items-center mb-1">
+          <ClockIcon className="h-5 w-5 mr-2" />
+          <span>Due Date (optional)</span>
+        </label>
+        <input
+          type="datetime-local"
+          value={dueDate ? format(new Date(dueDate), "yyyy-MM-dd'T'HH:mm") : ""}
+          onChange={(e) => setDueDate(e.target.value || null)}
+          className="w-full border border-gray-300 rounded-md outline-none p-3 text-base"
+        />
+      </div>
+
+      {/* Priority Selection */}
+      <div className="w-full py-5">
+        <RadioGroup
+          value={priority}
+          onChange={(e) => {
+            setPriority(e);
+          }}
+        >
+          <RadioGroup.Label className="text-base font-medium text-gray-900">
+            Priority
+          </RadioGroup.Label>
+          <div className="mt-2 flex space-x-4">
+            {priorities.map((priorityOption) => (
+              <RadioGroup.Option
+                key={priorityOption.id}
+                value={priorityOption.id}
+                className={({ checked }) =>
+                  `${
+                    checked
+                      ? `${priorityOption.color} bg-opacity-75 text-white`
+                      : "bg-white"
+                  }
+                  relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none`
+                }
+              >
+                {({ checked }) => (
+                  <>
+                    <div className="flex items-center">
+                      <div className="text-sm">
+                        <RadioGroup.Label
+                          as="p"
+                          className={`font-medium ${
+                            checked ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {priorityOption.name}
+                        </RadioGroup.Label>
+                      </div>
+                      {checked && (
+                        <div className="shrink-0 text-white ml-2">
+                          <CheckCircleIcon className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </RadioGroup.Option>
+            ))}
+          </div>
+        </RadioGroup>
+      </div>
+
 
                   {/* Local Alert */}
                   {alert && (

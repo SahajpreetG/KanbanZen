@@ -9,16 +9,31 @@ import { useBoardStore } from '@/store/BoardStore';
 import TaskTypeRadioGroup from './TaskTypeRadioGroup';
 import { PhotoIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
+import { ClockIcon } from "@heroicons/react/24/solid";
+import PriorityRadioGroup from "./PriorityRadioGroup";
 
 function Modal() {
-  const { isOpen, closeModal } = useModalStore();
-  const [addTask, image, setImage, newTaskInput, setNewTaskInput, newTaskType] = useBoardStore((state) => [
+  const [isOpen, closeModal] = useModalStore((state) => [state.isOpen, state.closeModal]);
+  const [
+    addTask,
+    image,
+    setImage,
+    newTaskInput,
+    setNewTaskInput,
+    newTaskType,
+    setNewTaskType,
+    newDueDate,
+    setNewDueDate,
+  ] = useBoardStore((state) => [
     state.addTask,
     state.image,
     state.setImage,
     state.newTaskInput,
     state.setNewTaskInput,
     state.newTaskType,
+    state.setNewTaskType,
+    state.newDueDate,
+    state.setNewDueDate,
   ]);
 
   useEffect(() => {
@@ -121,6 +136,22 @@ function Modal() {
                       </div>
                     )}
                   </div>
+                  {/* Due Date Field */}
+        <div className="mt-4">
+          <label className="flex items-center mb-1">
+            <ClockIcon className="h-5 w-5 mr-2" />
+            <span>Due Date (optional)</span>
+          </label>
+          <input
+            type="datetime-local"
+            value={newDueDate || ""}
+            onChange={(e) => setNewDueDate(e.target.value || null)}
+            className="w-full border border-gray-300 rounded-md outline-none p-3 text-base"
+          />
+        </div>
+
+                  {/* Priority Selection */}
+                  <PriorityRadioGroup />
 
                   <div className='flex justify-end'>
                     <button

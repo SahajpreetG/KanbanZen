@@ -4,9 +4,8 @@ import { create } from 'zustand';
 import { databases, ID, storage, account } from '@/appwrite';
 import { getTodosGroupedByColumn } from '@/lib/getTodosGroupedByColumn';
 import uploadImage from '@/lib/uploadImage';
-// Import AlertStore if you plan to use global alerts
 import { useAlertStore } from './AlertStore';
-import { AppwriteException } from 'appwrite'; // Add this import
+import { AppwriteException } from 'appwrite';
 
 interface BoardState {
   board: Board;
@@ -16,6 +15,10 @@ interface BoardState {
   newTaskInput: string;
   newTaskType: TypedColumn;
   image: File | null;
+  newDueDate: string | null;
+  setNewDueDate: (dueDate: string | null) => void;
+  newPriority: 'Low' | 'Medium' | 'High' | null;
+  setNewPriority: (priority: 'Low' | 'Medium' | 'High' | null) => void;
 
   searchString: string;
   setSearchString: (searchString: string) => void;
@@ -30,10 +33,12 @@ interface BoardState {
     todo: Todo,
     updatedTitle: string,
     columnId: TypedColumn,
-    image?: File | null
+    image?: File | null,
+    dueDate?: string | null,
+    priority?: 'Low' | 'Medium' | 'High' | null
   ) => Promise<void>;
 
-  deleteImage: (taskId: string, image: Image) => Promise<void>; // New function
+  deleteImage: (taskId: string, image: Image) => Promise<void>;
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -50,8 +55,15 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   newTaskInput: "",
   newTaskType: "todo",
   image: null,
+  newDueDate: null,
+  newPriority: null,
 
   setSearchString: (searchString) => set({ searchString }),
+  setNewTaskInput: (input: string) => set({ newTaskInput: input }),
+  setNewTaskType: (columnId: TypedColumn) => set({ newTaskType: columnId }),
+  setImage: (image: File | null) => set({ image }),
+  setNewDueDate: (dueDate: string | null) => set({ newDueDate: dueDate }),
+  setNewPriority: (priority: 'Low' | 'Medium' | 'High' | null) => set({ newPriority: priority }),
 
   setBoardState: (board) => set({ board }),
 
@@ -94,15 +106,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     );
 
     // Trigger the success alert
-    // If using global alerts
-    // useAlertStore.getState().showAlert('Task deleted successfully!');
+    useAlertStore.getState().showAlert('Task deleted successfully!', 'success');
   },
-
-  setNewTaskInput: (input: string) => set({ newTaskInput: input }),
-
-  setNewTaskType: (columnId: TypedColumn) => set({ newTaskType: columnId }),
-
-  setImage: (image: File | null) => set({ image }),
 
   updateTodoInDB: async (todo, columnId, newTodos = []) => {
     // Update the task's status and order in Appwrite
@@ -157,6 +162,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     const user = await account.get();
     const userId = user.$id;
 
+    const { newDueDate, newPriority } = get();
+
     // Create a new task in Appwrite
     const { $id } = await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
@@ -167,12 +174,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         status: columnId,
         order,
         userId, // Associate task with user
+        dueDate: newDueDate,
+        priority: newPriority,
         ...(file && { image: JSON.stringify(file) }), // Store image as JSON string
       }
     );
 
-    // Reset the new task input
-    set({ newTaskInput: "" });
+    // Reset the new task input and other state variables
+    set({ newTaskInput: "", newDueDate: null, newPriority: null, image: null });
 
     // Update the frontend state with the new task
     set((state) => {
@@ -184,9 +193,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         title: todo,
         status: columnId,
         order,
-        // Store image as JSON string only if it's defined
-        ...(file && { image: JSON.stringify(file) }),
         userId,
+        dueDate: newDueDate,
+        priority: newPriority,
+        ...(file && { image: JSON.stringify(file) }),
       };
 
       const column = newColumns.get(columnId);
@@ -209,15 +219,19 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     });
 
     // Trigger the success alert
-    // If using global alerts
-    // useAlertStore.getState().showAlert('Task added successfully!');
+    useAlertStore.getState().showAlert('Task added successfully!', 'success');
   },
 
-  // store/BoardStore.ts
-
-  updateTask: async (todo, updatedTitle, columnId, image) => {
+  updateTask: async (
+    todo: Todo,
+    updatedTitle: string,
+    columnId: TypedColumn,
+    image?: File | null,
+    dueDate?: string | null,
+    priority?: 'Low' | 'Medium' | 'High' | null
+  ) => {
     let file: Image | undefined;
-  
+
     if (image) {
       // Upload new image
       const fileUploaded = await uploadImage(image);
@@ -228,29 +242,50 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         };
       }
       // Delete the old image if it exists
-      // Inside the updateTask function
-if (todo.image) {
-  // Delete the old image if it exists
-  try {
-    // Code to delete the image
-  } catch (error) {
-    if (error instanceof AppwriteException) {
-      if (error.code !== 404) {
-        throw error;
-      } else {
-        console.warn('Image already deleted from storage.');
+      if (todo.image) {
+        let imageObj: Image;
+        if (typeof todo.image === 'string') {
+          imageObj = JSON.parse(todo.image);
+        } else {
+          imageObj = todo.image;
+        }
+        try {
+          await storage.deleteFile(imageObj.bucketId, imageObj.fileId);
+        } catch (error) {
+          if (error instanceof AppwriteException) {
+            if (error.code !== 404) {
+              throw error;
+            } else {
+              console.warn('Image already deleted from storage.');
+            }
+          } else {
+            throw error;
+          }
+        }
       }
-    } else {
-      throw error;
-    }
-  }
-}
-
     } else if (todo.image && !image) {
-      // This block will not execute if todo.image is null
-      // So no need to adjust here
+      // If the image is set to null, delete the old image
+      let imageObj: Image;
+      if (typeof todo.image === 'string') {
+        imageObj = JSON.parse(todo.image);
+      } else {
+        imageObj = todo.image;
+      }
+      try {
+        await storage.deleteFile(imageObj.bucketId, imageObj.fileId);
+      } catch (error) {
+        if (error instanceof AppwriteException) {
+          if (error.code !== 404) {
+            throw error;
+          } else {
+            console.warn('Image already deleted from storage.');
+          }
+        } else {
+          throw error;
+        }
+      }
     }
-  
+
     // Update the task in Appwrite
     await databases.updateDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
@@ -261,20 +296,24 @@ if (todo.image) {
         ...(file !== undefined
           ? { image: JSON.stringify(file) }
           : { image: null }), // Set image to null if deleted
+        dueDate: dueDate || null,
+        priority: priority || null,
       }
     );
-  
+
     // Update the task in the local state
     set((state) => {
       const newColumns = new Map(state.board.columns);
       const column = newColumns.get(columnId);
-  
+
       if (column) {
         const taskIndex = column.todos.findIndex((t) => t.$id === todo.$id);
         if (taskIndex !== -1) {
-          const updatedTask = {
+          const updatedTask: Todo = {
             ...column.todos[taskIndex],
             title: updatedTitle,
+            dueDate: dueDate || null,
+            priority: priority || null,
             ...(file !== undefined
               ? { image: JSON.stringify(file) }
               : { image: null }),
@@ -287,55 +326,51 @@ if (todo.image) {
           newColumns.set(columnId, { ...column, todos: newTodos });
         }
       }
-  
+
       return {
         board: {
           columns: newColumns,
         },
       };
     });
-  
+
     // Trigger the success alert
-    useAlertStore.getState().showAlert('Task updated successfully!');
+    useAlertStore.getState().showAlert('Task updated successfully!', 'success');
   },
 
+  deleteImage: async (taskId: string, image: Image) => {
+    try {
+      // Delete the file from Appwrite storage
+      await storage.deleteFile(image.bucketId, image.fileId);
 
-  // store/BoardStore.ts
+      // Update the task in Appwrite to remove the image field
+      await databases.updateDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        process.env.NEXT_PUBLIC_TODOS_COLLECTION_ID!,
+        taskId,
+        {
+          image: null, // Remove image
+        }
+      );
 
-deleteImage: async (taskId: string, image: Image) => {
-  try {
-    // Delete the file from Appwrite storage
-    await storage.deleteFile(image.bucketId, image.fileId);
-
-    // Update the task in Appwrite to remove the image field
-    await databases.updateDocument(
-      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-      process.env.NEXT_PUBLIC_TODOS_COLLECTION_ID!,
-      taskId,
-      {
-        image: null, // Remove image
-      }
-    );
-
-    // Update the frontend state to remove the image from the task
-    set((state) => {
-      const newColumns = new Map(state.board.columns);
-      newColumns.forEach((column, key) => {
-        const newTodos = column.todos.map((task) =>
-          task.$id === taskId ? { ...task, image: null } : task
-        );
-        newColumns.set(key, { ...column, todos: newTodos });
+      // Update the frontend state to remove the image from the task
+      set((state) => {
+        const newColumns = new Map(state.board.columns);
+        newColumns.forEach((column, key) => {
+          const newTodos = column.todos.map((task) =>
+            task.$id === taskId ? { ...task, image: null } : task
+          );
+          newColumns.set(key, { ...column, todos: newTodos });
+        });
+        return { board: { columns: newColumns } };
       });
-      return { board: { columns: newColumns } };
-    });
 
-    // Trigger a global success alert
-    useAlertStore.getState().showAlert('Image deleted successfully!');
-  } catch (error) {
-    console.error('Error deleting image:', error);
-    // Trigger a global error alert
-    useAlertStore.getState().showAlert('Failed to delete image.');
-  }
-},
-
+      // Trigger a global success alert
+      useAlertStore.getState().showAlert('Image deleted successfully!', 'success');
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      // Trigger a global error alert
+      useAlertStore.getState().showAlert('Failed to delete image.', 'error');
+    }
+  },
 }));

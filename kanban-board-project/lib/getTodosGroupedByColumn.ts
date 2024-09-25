@@ -25,15 +25,29 @@ export const getTodosGroupedByColumn = async (): Promise<Board> => {
                 });
             }
 
-            acc.get(todo.status)!.todos.push({
+            // Parse image if it exists
+            let image: Image | null = null;
+            if (todo.image) {
+                try {
+                    image = JSON.parse(todo.image);
+                } catch (error) {
+                    console.error('Error parsing image JSON:', error);
+                }
+            }
+
+            const newTodo: Todo = {
                 $id: todo.$id,
                 $createdAt: todo.$createdAt,
                 title: todo.title,
-                status: todo.status,
+                status: todo.status as TypedColumn,
                 order: todo.order,
-                ...(todo.image && { image: JSON.parse(todo.image) }),
+                image: image,
                 userId: todo.userId,
-            });
+                dueDate: todo.dueDate ?? null,
+                priority: todo.priority ?? null,
+            };
+
+            acc.get(todo.status)!.todos.push(newTodo);
 
             return acc;
         }, new Map<TypedColumn, Column>());
