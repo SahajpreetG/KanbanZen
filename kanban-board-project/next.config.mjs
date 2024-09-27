@@ -3,11 +3,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ["cloud.appwrite.io", "appwrite.io", "links.papareact.com", "your-image-domain.com"], // Add any other required domains
+        domains: ["cloud.appwrite.io", "appwrite.io"], 
     },
-    experimental: {
-        appDir: true, // Ensure experimental features are enabled if used
+    webpack(config) {
+        // Add support for importing SVGs as React components
+        config.module.rules.push({
+            test: /\.svg$/,
+            use: ["@svgr/webpack"],
+        });
+
+        return config;
     },
 };
 
 export default nextConfig;
+

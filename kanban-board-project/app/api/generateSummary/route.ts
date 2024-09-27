@@ -38,71 +38,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(response.choices[0].message);
 }
-// import { NextResponse } from "next/server";
-// import openai from "@/openai";
 
-// export async function POST(request: Request) {
-//     try {
-//         const { todos } = await request.json();
-
-//         const prompt = `
-//         Please provide a concise summary of the tasks on the board. Here's what I need:
-//         1. Count the number of tasks in each category (To do, In Progress, Done).
-//         2. Summarize the first task in the "To do" column with the correct status and creation date.
-
-//         Here are the tasks:
-//         ${JSON.stringify(todos)}
-//         `;
-
-//         const response = await openai.chat.completions.create({
-//             model: "gpt-4o-mini",
-//             temperature: 0.8,
-//             n: 1,
-//             stream: false,
-//             messages: [
-//                 {
-//                     role: "system",
-//                     content: `You are a helpful assistant that summarizes Kanban board tasks. Please ensure the output is user-friendly and accurate.`,
-//                 },
-//                 {
-//                     role: "user",
-//                     content: prompt,
-//                 },
-//             ],
-//         });
-
-//         const message = response.choices[0].message?.content || "No summary available.";
-
-//         const formattedResponse = `
-//         Here's the summary of the tasks:
-//         - **Task Count:**
-//           - To Do: ${todos.filter((todo) => todo.status === "todo").length}
-//           - In Progress: ${todos.filter((todo) => todo.status === "inprogress").length}
-//           - Done: ${todos.filter((todo) => todo.status === "done").length}
-//         - **First Task in "To Do":**
-//           - Title: "${todos.find((todo) => todo.status === "todo")?.title || "N/A"}"
-//           - Status: "To Do"
-//           - Created At: "${todos.find((todo) => todo.status === "todo")?.$createdAt || "N/A"}"
-//         `;
-
-//         return NextResponse.json({ content: formattedResponse });
-//     } catch (error) {
-//         console.error("Error in POST /api/generateSummary:", error);
-//         return NextResponse.json({ error: "An error occurred during the API call." }, { status: 500 });
-//     }
-// }
-
-// export async function POST(request: Request) {
-//     try {
-//         const { todos } = await request.json();
-
-//         // Return a simple JSON response to ensure basic functionality
-//         return NextResponse.json({ message: "API is working!", todos });
-//     } catch (error) {
-//         console.error("Error in POST /api/generateSummary:", error);
-//         return NextResponse.json({ error: "An error occurred." }, { status: 500 });
-//     }
-// }
 
 
 
