@@ -171,8 +171,8 @@ Distributed under the MIT License. See LICENSE for more information.
 ## Contact me
 Author: Sahajpreet Gulati
 Email: sahaj.preet@outlook.com
-LinkedIn: [linkedin.com/in/y](https://www.linkedin.com/in/sahajpreet-gulati/)
-GitHub: [github.com/yourusername](https://github.com/SahajpreetG)
+LinkedIn: [linkedin.com/in/sahajpreet-gulati](https://www.linkedin.com/in/sahajpreet-gulati/)
+GitHub: [github.com/SahajpreetG](https://github.com/SahajpreetG)
 Thank you for checking out KanbanZen! If you have any questions, suggestions, or feedback, please feel free to reach out. Your contributions and insights are highly valued.
 
 
