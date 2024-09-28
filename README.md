@@ -54,7 +54,7 @@ Note: Screenshots are not included in this text-based format. Please refer to th
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/KanbanZen.git
+git clone https://github.com/SahajpreetG/KanbanZen.git
 cd KanbanZen
 ```
 ## Install dependencies
